@@ -207,6 +207,7 @@ print 'gamc_t_v1 mixture total', mix.q['gamc_t_v1','t'](X,Y, frac)
 
 # <codecell>
 
+import eospac as eos
 rc= plt.rcParams
 rc['figure.figsize'] = (12, 8)
 rc['figure.dpi'] = 300
@@ -214,7 +215,7 @@ rc['font.size'] = 20
 
 # <codecell>
 
-mat = eos.EosMaterial(3720, ['Pt_DT', 'Ut_DT','gamc_s', 'therm_consistency'], spec=['t'])
+mat = eos.EosMaterial(2140, ['Pt_DT', 'Ut_DT','gamc_s', 'therm_consistency'], spec=['t'])
 
 # <codecell>
 

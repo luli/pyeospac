@@ -24,19 +24,21 @@ def eos_plot(mat, name, ax,spec='t', vmin=None, vmax=None,
     Tmin = np.max([mat.get_table(el)['Tmin'] for el in DT_tables])
 
     if Rmin == 0:
-        Xarr = np.logspace(-8, np.log10(Rmax), nx)
+        Xarr = np.logspace(-8, np.log10(Rmax)-0.1, nx)
         Xarr[0] = 0
     else:
-        Xarr = np.logspace(np.log10(Rmin), np.log10(Rmax), nx)
+        Xarr = np.logspace(np.log10(Rmin), np.log10(Rmax)-0.1, nx)
     if Tmin == 0:
         Yarr = np.logspace(1, np.log10(Tmax)-0.1, ny)
         Yarr[0] = 0
     else:
         Yarr = np.logspace(np.log10(Tmin)+0.1, np.log10(Tmax)-0.1, ny)
+    print Yarr.max()
 
     X, Y = np.meshgrid(Xarr, Yarr, indexing='ij')
 
     if name in avalable_tables:
+        print 'ok'
         tab = mat.get_table(name, spec)
         F = tab(X,Y)
         if vmax is None:

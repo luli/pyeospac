@@ -82,11 +82,6 @@ class EosTable(dict):
         self.label = ' '.join(label)
 
 
-
-
-
-
-
     def _interpolate(self, X, Y, kind):
         if X.shape != Y.shape:
             raise ValueError('X and Y arguments should be ndarrays of the same shape!')
