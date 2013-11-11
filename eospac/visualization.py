@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
 from .quantities import derived_quantities
-from .constants import tables as avalable_tables
+from .eospac.constants import tables as avalable_tables
 
 K2eV = 1./11640
 

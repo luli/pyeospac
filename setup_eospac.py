@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, Extension, find_packages
+from setuptools import Extension
 import os.path
 import re
 from datetime import datetime
@@ -9,10 +9,10 @@ import numpy
 
 def setup_eospac(cfg):
 
-    EOSPAC_INCLUDE = os.path.join(cfg['eospac_path'], "include", cfg['arch'], cfg['compiler'])
-    EOSPAC_LIB = os.path.join(cfg['eospac_path'], "lib", cfg['arch'], cfg['compiler'])
+    EOSPAC_INCLUDE = os.path.join(cfg['path'], "include", cfg['arch'], cfg['compiler'])
+    EOSPAC_LIB = os.path.join(cfg['path'], "lib", cfg['arch'], cfg['compiler'])
 
-    for test_path in [cfg['eospac_path'], EOSPAC_INCLUDE, EOSPAC_LIB]:
+    for test_path in [cfg['path'], EOSPAC_INCLUDE, EOSPAC_LIB]:
         if not os.path.exists(test_path):
             raise OSError("Path does not exist: '{0}'. Please edit setup.cfg !".format(test_path))
 
@@ -48,7 +48,7 @@ def setup_eospac(cfg):
                 if section_dict['previous']:
                     sections[section_dict['previous']]['end'] = idx-1
 
-    with open('eospac/constants.py', 'w') as f:
+    with open('eospac/eospac/constants.py', 'w') as f:
         f.write("""#!/usr/bin/python      
 # -*- coding: utf-8 -*-
 
@@ -73,11 +73,17 @@ def setup_eospac(cfg):
             f.write(''.join(out_txt))
             f.write(')\n\n')
 
-    return  Extension("pyeospac.eospac.libpyeospac",
-                 sources=["pyeospac/eospac/libpyeospac.pyx"],
+    return  [Extension("eospac.eospac.libpyeospac",
+                 sources=["eospac/eospac/libpyeospac.pyx"],
                  include_dirs=[numpy.get_include(), EOSPAC_INCLUDE],
                  library_dirs=[EOSPAC_LIB],
-                 libraries=['eospac6'])
+                 libraries=['eospac6']),
+            Extension("eospac.eospac.libseswrite",
+                 sources=["eospac/eospac/libseswrite.pyx"],
+                 include_dirs=[numpy.get_include(), EOSPAC_INCLUDE],
+                 library_dirs=[EOSPAC_LIB],
+                 libraries=['eospac6'])]
+
 
 
 

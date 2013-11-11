@@ -13,7 +13,8 @@ def setup():
     material = 7593
     sestab = eos.EosMaterial(material,
             tables=tables_list,
-            options={})
+            options={},
+            units='eospac')
 
 def test_interpolation():
     """Checking that the interpolation gives the values in F_array"""

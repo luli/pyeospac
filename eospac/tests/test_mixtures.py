@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import eospac as eos
+import eospac.eospac as eos
+
 
 def setup():
     global materials
@@ -10,13 +11,13 @@ def setup():
     global mix
     materials = [3720, 7593]
     tables_list = ['Pt_DT', 'Ut_DT']
-    mix = eos.EosMixture(materials, tables_list)
+    mix = eos.EospacMixture(materials, tables=tables_list)
 
 def test_mixture1el():
     """Check that 1 element mixture gives the same result as single material"""
-    mix1el = eos.EosMixture(materials, ['Pt_DT'])
+    mix1el = eos.EospacMixture(materials, ['Pt_DT'])
     mat_i =  mix1el.m3720
-    mat_d = eos.EosMaterial(3720, ['Pt_DT'])
+    mat_d = eos.EospacMaterial(3720, ['Pt_DT'])
     yield np.testing.assert_allclose, mat_i.Pt_DT['R_Array'], mat_d.Pt_DT['R_Array']
     yield np.testing.assert_allclose, mat_i.Pt_DT['F_Array'], mat_d.Pt_DT['F_Array']
 
