@@ -70,6 +70,11 @@ cdef extern from "ses_defines.h":
     cdef ses_error_flag   ses_set_validate(ses_file_handle the_handle)
     cdef ses_error_flag   ses_set_version(ses_file_handle the_handle, long the_version)
 
+    # getter routines
+    cdef ses_material_id_reference ses_get_materials(ses_file_handle the_handle, long* size);
+
+
+
 
 cpdef _write_sesbin(ses_string filename, ses_material_id matid, dict prop, dict tab_dict):
     """ Write binary file for a single material
@@ -110,7 +115,7 @@ cpdef _write_sesbin(ses_string filename, ses_material_id matid, dict prop, dict 
         ses_write_word(f, <ses_word> val)
 
     # Write 301 table
-    for tid in tab_dict:
+    for tid in sorted(tab_dict):
         if tid in [301, 303, 304, 305]:
             tab = tab_dict[tid]
             nr = len(tab['rho'])
@@ -124,12 +129,38 @@ cpdef _write_sesbin(ses_string filename, ses_material_id matid, dict prop, dict 
                 ses_write_2D(f, <ses_word_reference> np.PyArray_DATA(
                     tab[var].astype('float64', order='C')),
                     nr, nt)
+        elif tid in [502, 503, 504, 505, 601, 602, 603, 604, 605]:
+            tab = tab_dict[tid]
+            rho, temp = tab['rho'].copy(), tab['temp'].copy()
+            #if rho[0]  == 0.0: rho[0] = 1e-10
+            #if temp[0] == 0.0: temp[0] = 1e-10
+            nr = len(rho)
+            nt = len(temp)
+            ses_write_setup(f, matid, tid, nr, nt, 1)
+            ses_write_number(f, nr)
+            ses_write_number(f, nt)
+            ses_write_1D(f, <ses_word_reference> np.PyArray_DATA((rho)), nr)
+            ses_write_1D(f, <ses_word_reference> np.PyArray_DATA((temp)), nt)
+            ses_write_2D(f, <ses_word_reference> np.PyArray_DATA(
+                (tab['Z']).astype('float64', order='C')),
+                nr, nt)
         else:
-            raise NotImplemented
+            raise NotImplemented('Table {0} not implemened!'.format(tid))
 
 
 
     ses_close(f)
+
+
+def _get_materials(ses_string filename, float size):
+    cdef ses_file_handle f
+    cdef ses_open_type wopen_flag = 'R'
+    cdef ses_file_type file_type = 'B'
+
+    f = ses_open(filename, wopen_flag)
+    ses_set_format(f, file_type)
+
+    ses_get_materials(f, &size)
 
 
 

@@ -29,3 +29,9 @@ def EosMaterial(material=None, tables=['*'], options={},
            from . import feos
            return feos.FeosMaterial(material=material, tables=tables,
                                 options=options, spec=spec, units=units)
+       elif backend=='tabulated':
+           from . import tabulated
+           return tabulated.TabulatedMaterial(material=material, tables=tables,
+                                options=options, spec=spec, units=units)
+       else:
+           raise NotImplemented

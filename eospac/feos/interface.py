@@ -9,12 +9,13 @@ from .libpyfeos import  _get_calc_limits, _initialize, _init_mat,\
 
 
 from ..base import _pull_tables, TableBase, MaterialBase, GridBase
+from copy import deepcopy
 
 
 avalable_tabs = np.unique([tab.format(s=spec) \
-                for tab in ['P{s}_DT', 'U{s}_DT', 'S{s}_DT', 'A{s}_DT', 'Zf_DT',
-                            'P{s}_DU{s}', 'T_DU{s}', 'S{s}_DU{s}', 'A{s}_DU{s}', 'Zf_DU{s}']\
-                for spec in ['t', 'i', 'ec', 'tf']])
+                for tab in ['P{s}_DT', 'U{s}_DT', 'S{s}_DT', 'A{s}_DT', 'Zfc_DT',
+                            'P{s}_DU{s}', 'T_DU{s}', 'S{s}_DU{s}', 'A{s}_DU{s}', 'Zfc_DU{s}']\
+                for spec in ['t', 'iz', 'ec', 'e', 'ic']])
 
 # define a global global_table_handles variable
 if 'global_table_handles' not in globals():
@@ -56,6 +57,18 @@ class FeosTable(TableBase):
         else:
             raise NotImplemented
 
+    def __getitem__(self, key):
+        """ Overwriting default dict's __getitem__ method """
+        if key in ['abar', "Mean_Atomic_Mass"]:
+            return self['Atot']/self['Xtot']
+        if key in ['zbar', "Mean_Atomic_Num"]:
+            return self['Ztot']/self['Xtot']
+        if key == "Normal_Density": key = "rho_ref"
+        if key == "Modulus": key = "bulk_mod_ref"
+        if key == "R_Array": key = "D_Array"
+        if key == "Exchange_Coeff":
+            return 0.0
+        return super(FeosTable, self).__getitem__(key)
 
 class FeosMaterial(MaterialBase):
 
@@ -119,19 +132,19 @@ class FeosMaterial(MaterialBase):
 
         grid_units = self._set_units(units, 'Pt_DT')
         if opt['rho_grid'] is None:
-            rho_grid = default_grid.rho_grid
+            rho_grid = default_grid.rho_grid*grid_units.o2r('D', 'cgs', units)
         else:
-            rho_grid = opt['rho_grid']*grid_units.o2r('D', units, 'cgs')
+            rho_grid = opt['rho_grid']
 
         if opt['temp_grid'] is None:
-            temp_grid = default_grid.temp_grid
+            temp_grid = default_grid.temp_grid*grid_units.o2r('T', 'cgs', units)
         else:
-            temp_grid = opt['temp_grid']*grid_units.o2r('T', units, 'cgs')
+            temp_grid = opt['temp_grid']
 
         self.info['T_Array'] = temp_grid
         self.info['D_Array'] = rho_grid
-        temp_grid_feos = temp_grid*grid_units.o2r('T', 'cgs', 'feos')
-        rho_grid_feos = rho_grid*grid_units.o2r('D', 'cgs', 'feos')
+        temp_grid_feos = temp_grid*grid_units.o2r('T', units, 'feos')
+        rho_grid_feos = rho_grid*grid_units.o2r('D', units, 'feos')
 
         self.info.update(self._get_info_final(temp_grid_feos))
         if opt['precalculate']:
@@ -141,11 +154,17 @@ class FeosMaterial(MaterialBase):
         else:
             self.precalculated = {}
         for tab_idx, tab_key in enumerate(self.tables):
+           this_info = deepcopy(self.info)
+           if self.precalculated:
+               F_Array = self.precalculated[tab_key.split('_')[0]]*\
+                        grid_units.o2r(tab_key[0], 'feos', units)
+               this_info['F_Array'] =  F_Array.T
+
            setattr(self, tab_key,
                 FeosTable(tab_key,
                             self._id,
                             options=opt,
-                            info=self.info,
+                            info=this_info,
                             units=units))
         self._init_base()
 
@@ -157,7 +176,7 @@ class FeosMaterial(MaterialBase):
                 self.options['use_maxwell'], R_flat, T_flat)
         res = {}
         for key in res_tmp:
-            res[key+'_Array'] = res_tmp[key].reshape(R.shape)
+            res[key] = res_tmp[key].reshape(R.shape)
         return res
 
 

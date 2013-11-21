@@ -15,7 +15,7 @@ def _pull_tables(keys, spec, valid_tables=[]):
       - keys: list: a list containing table names including regular
         expressions, or derived quantities names. The '{s}' pattern will be
         expanded according to provided species
-      - spec: list of species. Should be in ['t','e', 'ic']
+      - spec: list of species. Should be in ['t','e', 'ic', 'iz']
       - valid_tables: list of valid tables # cst.tables
 
     Returns
@@ -286,6 +286,7 @@ class MaterialBase(dict):
         if spec is not None:
             return getattr(self, table_name.format(s=spec))
         else:
+
             return getattr(self, table_name)
 
     def _get_state_DT(self, X, Y, spec='t'):
@@ -342,16 +343,17 @@ class MaterialBase(dict):
         """
         Check that provided options are consistent.
         """
+        # check that given options don't contain unknown key
+        for key in options_in:
+            if key not in self._default_options:
+                raise KeyError("Unknown option key {0}. Accepted options are: {1}".format(
+                                    key, str(self._default_options.keys())))
+        # setting to default version if key was not provided
+        for key, default_val in self._default_options.iteritems():
+            if key not in options_in:
+                options_in[key] = default_val
         if self._backend == 'feos':
-            # check that given options don't contain unknown key
-            for key in options_in:
-                if key not in self._default_options:
-                    raise KeyError("Unknown option key {0}. Accepted options are: {1}".format(
-                                        key, str(self._default_options.keys())))
-            # setting to default version if key was not provided
-            for key, default_val in self._default_options.iteritems():
-                if key not in options_in:
-                    options_in[key] = default_val
+            pass
         return options_in
 
     _set_units = _set_units
@@ -365,7 +367,7 @@ class MaterialBase(dict):
         """
 
         if ext == 'sesame_bin':
-            from .eospac.libseswrite import _write_sesbin
+            from .eospac.libsesio import _write_sesbin
             P_DT = self.get_table('P{s}_DT', spec='t')
             props = {}
             if matid is None:
@@ -373,10 +375,10 @@ class MaterialBase(dict):
             for key in ['Mean_Atomic_Num', 'Mean_Atomic_Mass',
                     'Normal_Density', 'Modulus', 'Exchange_Coeff']:
                 props[key] = P_DT[key]
+            units = EosUnits(self._requested_units, 'eospac')
             tabs = {}
-            units = EosUnits(self._original_units, 'eospac')
             for tab_id, spec in [(301, 't'), (303, 'ic'),
-                                 (304, 'e'), (305, 'i')]:
+                                 (304, 'e'), (305, 'iz')]:
                 if np.all([key.format(s=spec) in self.tables for key in direct_tables]):
                    P_DT = self.get_table('P{s}_DT', spec=spec)
                    U_DT = self.get_table('U{s}_DT', spec=spec)
@@ -386,9 +388,27 @@ class MaterialBase(dict):
                                     'U': U_DT['F_Array']*units.o2r('U'),
                                     'P':  P_DT['F_Array']*units.o2r('P'),
                                     'A': A_DT['F_Array']*units.o2r('A')}
+                else:
+                    print "Ignored {s} specie, as it doens't seem to be present in the table!".format(s=spec)
+            # writing ionization
+            Zf = self.get_table('Zfc_DT')
+            tabs[601] = { 'rho': Zf['R_Array']*units.o2r('D'),
+                          'temp': Zf['T_Array']*units.o2r('T'),
+                          'Z':  Zf['F_Array']}
+            #for tab_id in [601]:
+            #    ctab = tabs[tab_id]
+            #    ctab['rho'] = np.log10(np.fmax(1e-10, ctab['rho']))
+            #    ctab['temp'] = np.log10(np.fmax(1e-10, ctab['temp']))
+
             _write_sesbin(filename, matid, props, tabs)
         else:
             raise NotImplemented
+
+try:
+    from .io import save2vtk
+    MaterialBase.save2vtk = save2vtk
+except ImportError:
+    pass
 
 
 
@@ -396,7 +416,9 @@ class MaterialBase(dict):
 
 class GridBase(object):
     # Normalized grid from 3720 table
-    rho_grid_init = np.array([0.000e+00, 1.000e-6, 2.586e-06, 5.172e-06, 1.293e-05, 2.586e-05, 5.172e-05,
+    rho_grid_init = np.array([0.000e+00, 1e-10, 5.0e-10, 1.0e-9, 5.0e-9,
+        1.0e-8, 5.0e-8, 1.0e-7, 5.0e-7,
+        1.000e-6, 2.586e-06, 5.172e-06, 1.293e-05, 2.586e-05, 5.172e-05,
         1.293e-04, 2.586e-04, 5.172e-04, 1.293e-03, 2.586e-03, 3.879e-03, 6.465e-03,
         1.034e-02, 1.551e-02, 2.586e-02, 3.879e-02, 6.465e-02, 1.034e-01, 1.551e-01,
         2.068e-01, 2.586e-01, 3.232e-01, 3.879e-01, 4.525e-01, 5.172e-01, 6.465e-01,
@@ -425,12 +447,12 @@ class GridBase(object):
         1.160e+07, 1.740e+07, 2.901e+07, 6.962e+07, 1.160e+08, 2.320e+08, 5.802e+08,
         1.160e+09, 2.320e+09, 5.802e+09, 1.160e+10])
 
-    def __init__(self, rho_ref, kind='solid', subsample_rho=1, subsample_temp=1):
+    def __init__(self, rho_ref, kind='solid', subsample_rho=1, subsample_temp=1, temp_factor=1.0):
         if kind=='solid':
             self.rho_grid = self._subsample_arithmetic_mean(
-                                self.rho_grid_init*rho_ref, subsample_rho)
+                                self.rho_grid_init*rho_ref/2.7, subsample_rho)
             self.temp_grid = self._subsample_arithmetic_mean(
-                                self.temp_grid_init, subsample_temp)
+                                self.temp_grid_init*temp_factor, subsample_temp)
         else:
             raise NotImplemented
 

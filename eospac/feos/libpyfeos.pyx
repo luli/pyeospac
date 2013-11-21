@@ -99,10 +99,14 @@ cpdef _get_eos_all(int table_handle, int num_elements, int use_maxwell,
                 &P_tf[k], &U_tf[k], &S_tf[k], &A_tf[k])
 
     res =  {'Pt': Pt.base,'Ut': Ut.base, 'St': St.base, 'At': At.base,
-            'Pi': Pi.base,'Ui': Ui.base, 'Si': Si.base, 'Ai': Ai.base,
-            'Pe': Pe.base,'Ue': Ue.base, 'Se': Se.base, 'Ae': Ae.base,
-            'P_tf': P_tf.base,'U_tf': U_tf.base, 'S_tf': S_tf.base, 'A_tf': A_tf.base,
-            'Zbar': Zbar.base, 'Zi': Zi, 'bellow_binodal': bellow_binodal.base}
+            'Piz': Pi.base,'Uiz': Ui.base, 'Siz': Si.base, 'Aiz': Ai.base,
+            'Pec': Pe.base,'Uec': Ue.base, 'Sec': Se.base, 'Aec': Ae.base,
+            # pure the electronic part is given by the TF without cold
+            # curve corrections
+            'Pe': P_tf.base, 'Ue': U_tf.base, 'Se': S_tf.base, 'Ae': A_tf.base,
+            'Pic': Pt.base - P_tf.base,'Uic': Ut.base - U_tf.base,
+                    'Sic': St.base - S_tf.base, 'Aic': At.base - A_tf.base,
+            'Zfc': Zbar.base, 'Zi': Zi, 'bellow_binodal': bellow_binodal.base}
     return res
 
 

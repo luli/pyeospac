@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import re
+from copy import deepcopy
 
 from .libpyeospac import _create_tables, _load_tables, _interpolate,\
             _get_table_info, _set_option, _mix
@@ -38,7 +39,7 @@ class EospacTable(TableBase):
 
         Xvals = np.array(X.flatten(), dtype='float64')*self._X_convert
         Yvals = np.array(Y.flatten(), dtype='float64')*self._Y_convert
-        fVals_f, dFx_f, dFy_f = _interpolate(self._id, Xvals, Yvals)
+        fVals_f, dFx_f, dFy_f = _interpolate(self._id, Xvals, Yvals)#, self.options['fill_extrapolated'])
         fVals_f *= self._F_convert
         dFx_f *= self._F_convert/self._X_convert
         dFy_f *= self._F_convert/self._Y_convert
@@ -81,6 +82,7 @@ class EospacTable(TableBase):
         """ Overwriting default dict's __getitem__ method """
         if key == "Z": key = "Mean_Atomic_Num"
         if key == "A": key = "Mean_Atomic_Mass"
+        if key == "rho_ref": key = "Normal_Density"
         if key == "D_Array": key = "R_Array"
 
 
@@ -114,9 +116,9 @@ class EospacTable(TableBase):
         options_keys = sorted(options.keys(),
                                 key=lambda k: cst.options[k])
         for key in options_keys:
-            if options[key] is True: option_val = 1.0
             if options[key]:
                 option_val = options[key]
+                if options[key] is True: option_val = 1.0
                 _set_option(self._id, cst.options[key],  option_val)
             # applying false to an option doesn't really work at the
             # moment
@@ -146,7 +148,7 @@ class EospacMaterial(MaterialBase):
        self.material = int(material)
 
        self.tables = _pull_tables(tables, spec, cst.tables)
-       self.options = options
+       self.options = {key: deepcopy(val) for key, val in options.iteritems()}
        if table_handles is None:
            self._id_list = _create_tables(
                    np.array([cst.tables[key] for key in self.tables], dtype='int32'),

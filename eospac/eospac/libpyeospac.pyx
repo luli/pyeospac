@@ -198,14 +198,22 @@ cpdef _interpolate(long table_handle,
     if error_code:
         if error_code == EOS_INTERP_EXTRAPOLATED:
             xyBounds = _check_extrap(table_handle, xVals, yVals)
+            print xyBounds
             for error in np.unique(xyBounds):
                 if error:
                     default_error_labels =  cst.errors.keys()
                     default_error_ids =  np.array(cst.errors.values())
-                    print 'Error {0} occured {1} times at indices {2}'.format(
+                    err_mask = xyBounds==error
+                    print 'Error {0} occured {1} times!'.format(
                             default_error_labels[np.argmin(np.abs(default_error_ids - error))],
-                            np.sum(xyBounds==error),
-                            np.nonzero(xyBounds==error))
+                            np.sum(err_mask))
+                    print 'Following (idx, X, Y) elements raised an exception:'
+                    iXY = np.zeros(nXYPairs, dtype='i4, f8, f8').T
+                    iXY['f0'] = np.arange(nXYPairs)
+                    iXY['f1'] = xVals
+                    iXY['f2'] = yVals
+                    print iXY[err_mask, :]
+
 
 
         raise RuntimeError( _get_error_message(error_code) )

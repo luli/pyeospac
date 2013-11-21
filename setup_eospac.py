@@ -78,8 +78,8 @@ def setup_eospac(cfg):
                  include_dirs=[numpy.get_include(), EOSPAC_INCLUDE],
                  library_dirs=[EOSPAC_LIB],
                  libraries=['eospac6']),
-            Extension("eospac.eospac.libseswrite",
-                 sources=["eospac/eospac/libseswrite.pyx"],
+            Extension("eospac.eospac.libsesio",
+                 sources=["eospac/eospac/libsesio.pyx"],
                  include_dirs=[numpy.get_include(), EOSPAC_INCLUDE],
                  library_dirs=[EOSPAC_LIB],
                  libraries=['eospac6'])]

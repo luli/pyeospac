@@ -83,12 +83,36 @@ def add_quantity(**kwargs):
 
 # Isentropic quantities
 # ---------------------
-@add_quantity(name='Cs2', args='DT', dependencies=['P{s}_DS{s}', 'S{s}_DT'])
-def isentropic_sound_speed2(tab, spec, *XYf):
+@add_quantity(name='Cs2_old', args='DT', dependencies=['P{s}_DS{s}', 'S{s}_DT'])
+def isentropic_sound_speed2_old(tab, spec, *XYf):
     """Isentropic sound speed square"""
     XYf = list(XYf)
     XYf[1] = tab.get_table('S{s}_DT', spec)(*XYf)
     return tab.get_table('P{s}_DS{s}', spec).dFx(*XYf)
+
+@add_quantity(name='Cs2', args='DT', dependencies=['P{s}_DT', 'P{s}_DU{s}', 'U{s}_DT'])
+def isentropic_sound_speed2(tab, spec, *XYf):
+    """Isentropic sound speed gamma: ρ★Cs²/P"""
+    XYf_DT = list(XYf)
+    dens = XYf[0]
+    pres = tab.get_table('P{s}_DT', spec)(*XYf_DT)
+    eint = tab.get_table('U{s}_DT', spec)(*XYf_DT)
+    XYf_DU = XYf_DT[:]
+    XYf_DU[1] = eint[:]
+
+    dP_drho = tab.get_table('P{s}_DT', spec).dFx(*XYf_DT)
+    dP_deint = tab.get_table('P{s}_DU{s}', spec).dFy(*XYf_DU)
+
+    return  dP_drho+ pres*dP_deint/dens**2
+
+@add_quantity(name='gamc_s', args='DT', dependencies=['P{s}_DT', 'P{s}_DU{s}'])
+def isentropic_gamc_s(tab, spec, *XYf):
+    """Isentropic sound speed"""
+    XYf_DT = list(XYf)
+    dens = XYf[0]
+    pres = tab.get_table('P{s}_DT', spec)(*XYf_DT)
+
+    return dens*tab.q['Cs2', spec](*XYf_DT)/pres
 
 @add_quantity(name='Cs2_check', args='DT', dependencies=['St_DPt', 'Pt_DT'], spec=['t'])
 def isentropic_sound_speed2_check(tab, spec, *XYf):
@@ -167,16 +191,16 @@ def thermal_expansion_coeff_check(tab, spec, *XYf):
     XYf[0] = tab.Pt_DT(*XYf)
     return -tab.D_PtT.dFy(*XYf)/rho
 
-@add_quantity(name='gamc_s', args='DT', dependencies=['P{s}_DT', 'S{s}_DT', 'P{s}_DS{s}'])
-def gamma_adiabatic(tab, spec, *XYf):
-    r"""Adiabatic exponent:
-        $\gamma_S = \frac{\rho}{P}\left.\frac{\partial P}{\partial \rho}\right|_S$"""
-    XYf_DT = list(XYf)
-    rho = XYf[0]
-    P =  tab.get_table('P{s}_DT', spec)(*XYf_DT)
-    XYf_DS = XYf_DT[:]
-    XYf_DS[1] = tab.get_table('S{s}_DT', spec)(*XYf_DT)
-    return rho*tab.get_table('P{s}_DS{s}', spec).dFx(*XYf_DS)/P
+#@add_quantity(name='gamc_s', args='DT', dependencies=['P{s}_DT', 'S{s}_DT', 'P{s}_DS{s}'])
+#def gamma_adiabatic(tab, spec, *XYf):
+#    r"""Adiabatic exponent:
+#        $\gamma_S = \frac{\rho}{P}\left.\frac{\partial P}{\partial \rho}\right|_S$"""
+#    XYf_DT = list(XYf)
+#    rho = XYf[0]
+#    P =  tab.get_table('P{s}_DT', spec)(*XYf_DT)
+#    XYf_DS = XYf_DT[:]
+#    XYf_DS[1] = tab.get_table('S{s}_DT', spec)(*XYf_DT)
+#    return rho*tab.get_table('P{s}_DS{s}', spec).dFx(*XYf_DS)/P
 
 @add_quantity(name='gamc_t', args='DT', dependencies=['P{s}_DT'])
 def gamma_isothermal(tab, spec, *XYf):
@@ -215,24 +239,38 @@ def fundemental_derivative(tab, spec, *XYf):
     return 1 + 0.5*rho**2*tab.get_table('P{s}_DS{s}', spec).dFxx(*XYf_DS)/\
             (tab.q['gamc_s'](*XYf)*tab.get_table('P{s}_DT', spec)(*XYf_DT))
 
-@add_quantity(name='therm_consistency', args='DT', dependencies=['U{s}_DS{s}', 'P{s}_DT', 'S{s}_DT'])
+@add_quantity(name='therm_consistency_T', args='DT', dependencies=['U{s}_DS{s}', 'P{s}_DT', 'S{s}_DT'])
 def check_thermodynamic_consistency(tab, spec, *XYf):
-    """Thermodynamic consistency: relative error"""# ε = mean( (∂E/∂S|_V - T)/T, (∂E/∂V|_S - P)/P )"""
+    """Thermodynamic consistency: relative error"""# ε = (∂E/∂S|_V - T)/T
     XYf_DT = XYf[:]
     T = XYf_DT[1]
-    rho = XYf_DT[0]
-    P = tab.get_table('P{s}_DT', spec)(*XYf_DT)
     XYf_DS = list(XYf[:])
     XYf_DS[1] = tab.get_table('S{s}_DT', spec)(*XYf_DT)
     # (∂E/∂S|_V - T)/T
     dE_S = tab.get_table('U{s}_DS{s}', spec).dFy(*XYf_DS)
-    err1  = np.abs((dE_S - T))/T
+    return np.abs((dE_S - T))/T
+
+@add_quantity(name='therm_consistency_S', args='DT', dependencies=['U{s}_DS{s}', 'P{s}_DT', 'S{s}_DT'])
+def check_thermodynamic_consistency(tab, spec, *XYf):
+    """Thermodynamic consistency: relative error"""# ε = (∂E/∂V|_S - P)/P )"""
+    XYf_DT = XYf[:]
+    rho = XYf_DT[0]
+    P = tab.get_table('P{s}_DT', spec)(*XYf_DT)
+    XYf_DS = list(XYf[:])
+    XYf_DS[1] = tab.get_table('S{s}_DT', spec)(*XYf_DT)
     # (∂E/∂V|_S - P)/P
     dE_V = rho**2*tab.get_table('U{s}_DS{s}', spec).dFx(*XYf_DS)
-    err2 = np.abs(dE_V - P)/np.abs(P)
-    return (err1**2 + err2**2)**0.5
+    return  np.abs(dE_V - P)/np.abs(P)
 
-@add_quantity(name='game', args='DT', dependencies=['P{s}_DT', 'U{s}_DT'])
-def game(tab, spec, *XYf):
+@add_quantity(name='game0', args='DT', dependencies=['P{s}_DT', 'U{s}_DT'])
+def game0(tab, spec, *XYf):
     r"""Polytropic index: $P= (\gamma_e - 1) E \rho $"""
     return tab.get_table('P{s}_DT', spec)(*XYf)/(XYf[0]*tab.get_table('U{s}_DT', spec)(*XYf)) + 1
+
+@add_quantity(name='game1', args='DT', dependencies=['P{s}_DU{s}', 'U{s}_DT'])
+def game1(tab, spec, *XYf):
+    r"""Polytropic index: $P= (\gamma_e - 1) E \rho $"""
+    XYf = list(XYf)
+    dens = XYf[0]
+    XYf[1] = tab.get_table('U{s}_DT', spec)(*XYf)
+    return tab.get_table('P{s}_DU{s}', spec).dFy(*XYf)/dens + 1
