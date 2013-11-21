@@ -152,15 +152,15 @@ cpdef _write_sesbin(ses_string filename, ses_material_id matid, dict prop, dict 
     ses_close(f)
 
 
-def _get_materials(ses_string filename, float size):
-    cdef ses_file_handle f
-    cdef ses_open_type wopen_flag = 'R'
-    cdef ses_file_type file_type = 'B'
-
-    f = ses_open(filename, wopen_flag)
-    ses_set_format(f, file_type)
-
-    ses_get_materials(f, &size)
+#def _get_materials(ses_string filename, float size):
+#    cdef ses_file_handle f
+#    cdef ses_open_type wopen_flag = 'R'
+#    cdef ses_file_type file_type = 'B'
+#
+#    f = ses_open(filename, wopen_flag)
+#    ses_set_format(f, file_type)
+#
+#    ses_get_materials(f, &size)
 
 
 
