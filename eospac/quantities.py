@@ -274,3 +274,35 @@ def game1(tab, spec, *XYf):
     dens = XYf[0]
     XYf[1] = tab.get_table('U{s}_DT', spec)(*XYf)
     return tab.get_table('P{s}_DU{s}', spec).dFy(*XYf)/dens + 1
+
+@add_quantity(name='Fmat', args='DT', dependencies=['P{s}_DU{s}', 'U{s}_DT', 'Cs2', ])
+def Fmat(tab, spec, *XYf):
+    r"""Material flux: c_s (\rho*e + \rho (C_s**2/2) + P)
+    Only works with eospac unit backend
+    """
+    XYf = list(XYf)
+    dens = XYf[0]*1e3   # g/cc -> kg/m^3
+    Ut_DT = np.fmax(0, tab.get_table('U{s}_DT', spec)(*XYf)) * 1e6          # MJ/kg -> J/kg 
+    Pt_DT = np.fmax(0, tab.get_table('P{s}_DT', spec)(*XYf)) * 1e9     # GPa -> Pa
+    C_s = tab.q['Cs2', spec](*XYf)**0.5  * 1e3   # km/s -> m/s
+    return  C_s*(dens*Ut_DT + Pt_DT + dens*C_s**2/2 )
+
+@add_quantity(name='Bo', args='DT', dependencies=['Fmat'])
+def Bo(tab, spec, *XYf):
+    r"""Material flux/Rad flux
+    Only works with eospac unit backend
+    """
+    from scipy.constants import physical_constants
+    sigma_b = physical_constants['Stefan-Boltzmann constant'][0]
+    XYf = list(XYf)
+    return tab.q['Fmat', spec](*XYf)/(sigma_b*XYf[1]**4)
+
+@add_quantity(name='R', args='DT', dependencies=['U{s}_DT'])
+def R(tab, spec, *XYf):
+    r"""Material pressure/Radiation pressure
+    Only works with eospac unit backend
+    """
+    from scipy.constants import physical_constants, c
+    sigma_b = physical_constants['Stefan-Boltzmann constant'][0]
+    XYf = list(XYf)
+    return tab.get_table('U{s}_DT', spec)(*XYf)*XYf[0]*1e9/(4*sigma_b/c*XYf[1]**4)

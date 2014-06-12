@@ -2,4 +2,4 @@
 *.swp
 build
 dist
-*o
+*.o

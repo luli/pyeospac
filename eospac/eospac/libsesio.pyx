@@ -71,7 +71,7 @@ cdef extern from "ses_defines.h":
     cdef ses_error_flag   ses_set_version(ses_file_handle the_handle, long the_version)
 
     # getter routines
-    cdef ses_material_id_reference ses_get_materials(ses_file_handle the_handle, long* size);
+    cdef ses_material_id_reference ses_get_materials(ses_file_handle the_handle, long* size)
 
 
 

@@ -5,6 +5,10 @@ data/Al_ionmix_73719.sesb
 data/polystyrene_ionmix_77592.sesb
 data/Fe_feos_82140.sesb
 data/Fe_ionmix_72140.sesb
-
+data/Fe_sesame_92150.sesb
+data/Fe_blf_2151.sesb
+data/Cu_feos_83332.sesb
+data/Cu_feos_83333.sesb
 
 /tmp/ionmix_63720.ses
+/tmp/Fe_sesame_93719.sesb

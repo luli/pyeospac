@@ -90,6 +90,8 @@ cpdef _get_eos_all(int table_handle, int num_elements, int use_maxwell,
     Zbar, Zi = np.zeros(Npt), np.zeros((Npt, num_elements))
     bellow_binodal = np.zeros(Npt, 'int32')
 
+    E_offsets = _get_energy_offsets(table_handle)
+
     for k in range(Npt):
         FEOS_Get_EOS_All(table_handle, use_maxwell, rho[k], temp[k], # inputs
                 &bellow_binodal[k], &Pt[k], &Ut[k], &St[k], &At[k],\
@@ -104,9 +106,14 @@ cpdef _get_eos_all(int table_handle, int num_elements, int use_maxwell,
             # pure the electronic part is given by the TF without cold
             # curve corrections
             'Pe': P_tf.base, 'Ue': U_tf.base, 'Se': S_tf.base, 'Ae': A_tf.base,
-            'Pic': Pt.base - P_tf.base,'Uic': Ut.base - U_tf.base,
+            #'Pe': Pi.base, 'Ue': Ui.base, 'Se': Si.base, 'Ae': Ai.base,
+            'Pic': Pt.base - P_tf.base ,'Uic': Ut.base - (U_tf.base+E_offsets['offs_electron']),
                     'Sic': St.base - S_tf.base, 'Aic': At.base - A_tf.base,
             'Zfc': Zbar.base, 'Zi': Zi, 'bellow_binodal': bellow_binodal.base}
+    for key in res.keys():
+        print key, np.min(res[key])
+    for key in E_offsets:
+        print key, E_offsets[key]
     return res
 
 

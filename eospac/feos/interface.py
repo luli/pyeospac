@@ -175,6 +175,7 @@ class FeosMaterial(MaterialBase):
         res_tmp = _get_eos_all(self._id, self._Nelements,
                 self.options['use_maxwell'], R_flat, T_flat)
         res = {}
+
         for key in res_tmp:
             res[key] = res_tmp[key].reshape(R.shape)
         return res

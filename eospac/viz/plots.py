@@ -23,16 +23,16 @@ def eos_plot(mat, name, ax,spec='t', vmin=None, vmax=None,
     Tmin = np.max([mat.get_table(el)['Tmin'] for el in DT_tables])
 
     if Rmin == 0:
-        Xarr = np.logspace(-8, np.log10(Rmax)-0.1, nx)
+        Xarr = np.logspace(-5, np.log10(Rmax)-0.1, nx)
         Xarr[0] = 0
     else:
         Xarr = np.logspace(np.log10(Rmin), np.log10(Rmax)-0.1, nx)
     if Tmin == 0:
         Yarr = np.logspace(1, np.log10(Tmax)-0.1, ny)
-        Yarr[0] = 0
+        #Yarr[0] = 0
     else:
         Yarr = np.logspace(np.log10(Tmin)+0.1, np.log10(Tmax)-0.1, ny)
-    print Yarr.max()
+    print Yarr.min()
 
     X, Y = np.meshgrid(Xarr, Yarr, indexing='ij')
 
@@ -125,7 +125,10 @@ def plot_eos_table(ax, mat, table_name, spec='t', vmin=None, vmax=None,
 
     cs = ax.pcolormesh(X, Y*K2eV, F, cmap=plt.cm.jet, norm = LogNorm(),
             vmin=vmin, vmax=vmax)
-    levels = np.arange(np.log10(F[F>0].min()), int(np.log10(F.max())))
+    if vmin is not None:
+        levels = np.arange(int(np.log10(vmin)), int(np.log10(F.max())))
+    else:
+        levels = np.arange(np.log10(F[F>0].min()), int(np.log10(F.max())))
     logF = np.log10(np.where(F>0, F, F[F>0].min()))
     cl = ax.contour(X, Y/11640, logF, levels, colors='k')
     plt.clabel(cl, fontsize=10, inline=False, fmt='%1.0d', use_clabeltext=True)

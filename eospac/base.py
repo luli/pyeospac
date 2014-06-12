@@ -386,15 +386,18 @@ class MaterialBase(dict):
                    tabs[tab_id] = { 'rho': P_DT['R_Array']*units.o2r('D'),
                                     'temp': P_DT['T_Array']*units.o2r('T'),
                                     'U': U_DT['F_Array']*units.o2r('U'),
-                                    'P':  P_DT['F_Array']*units.o2r('P'),
-                                    'A': A_DT['F_Array']*units.o2r('A')}
+                                    'P': P_DT['F_Array']*units.o2r('P'),
+                                    'A': P_DT['F_Array']*units.o2r('A')}
                 else:
                     print "Ignored {s} specie, as it doens't seem to be present in the table!".format(s=spec)
             # writing ionization
-            Zf = self.get_table('Zfc_DT')
-            tabs[601] = { 'rho': Zf['R_Array']*units.o2r('D'),
-                          'temp': Zf['T_Array']*units.o2r('T'),
-                          'Z':  Zf['F_Array']}
+            if hasattr(self, 'Zfc_DT'):
+                Zf = self.Zfc_DT
+                tabs[601] = { 'rho': Zf['R_Array']*units.o2r('D'),
+                              'temp': Zf['T_Array']*units.o2r('T'),
+                              'Z':  Zf['F_Array']}
+            else:
+                print 'Ionization table not present!'
             #for tab_id in [601]:
             #    ctab = tabs[tab_id]
             #    ctab['rho'] = np.log10(np.fmax(1e-10, ctab['rho']))
@@ -412,54 +415,84 @@ except ImportError:
 
 
 
+def _arithmetic_mean(vect):
+    return 0.5*(vect[:-1] + vect[1:])
+
+def _geometric_mean(vect):
+    return (vect[:-1]*vect[1:])**0.5
+
 
 
 class GridBase(object):
-    # Normalized grid from 3720 table
-    rho_grid_init = np.array([0.000e+00, 1e-10, 5.0e-10, 1.0e-9, 5.0e-9,
-        1.0e-8, 5.0e-8, 1.0e-7, 5.0e-7,
-        1.000e-6, 2.586e-06, 5.172e-06, 1.293e-05, 2.586e-05, 5.172e-05,
-        1.293e-04, 2.586e-04, 5.172e-04, 1.293e-03, 2.586e-03, 3.879e-03, 6.465e-03,
-        1.034e-02, 1.551e-02, 2.586e-02, 3.879e-02, 6.465e-02, 1.034e-01, 1.551e-01,
-        2.068e-01, 2.586e-01, 3.232e-01, 3.879e-01, 4.525e-01, 5.172e-01, 6.465e-01,
-        7.758e-01, 9.051e-01, 1.034e+00, 1.163e+00, 1.293e+00, 1.422e+00, 1.551e+00,
-        1.681e+00, 1.810e+00, 1.939e+00, 2.068e+00, 2.133e+00, 2.198e+00, 2.262e+00,
-        2.327e+00, 2.392e+00, 2.456e+00, 2.508e+00, 2.560e+00, 2.586e+00, 2.612e+00,
-        2.663e+00, 2.715e+00, 2.780e+00, 2.844e+00, 2.974e+00, 3.103e+00, 3.362e+00,
-        3.620e+00, 3.879e+00, 4.137e+00, 4.396e+00, 4.655e+00, 4.913e+00, 5.172e+00,
-        5.818e+00, 6.465e+00, 7.112e+00, 7.758e+00, 8.405e+00, 9.051e+00, 9.698e+00,
-        1.034e+01, 1.163e+01, 1.293e+01, 1.422e+01, 1.551e+01, 1.681e+01, 1.810e+01,
-        1.939e+01, 2.068e+01, 2.198e+01, 2.327e+01, 2.456e+01, 2.586e+01, 2.844e+01,
-        3.103e+01, 3.362e+01, 3.879e+01, 4.525e+01, 5.172e+01, 5.818e+01, 6.465e+01,
-        7.758e+01, 9.051e+01, 1.034e+02, 1.293e+02, 1.551e+02, 1.810e+02, 2.068e+02,
-        2.327e+02, 2.586e+02, 3.232e+02, 3.879e+02, 5.172e+02, 7.758e+02, 1.034e+03,
-        1.551e+03, 2.068e+03, 2.586e+03, 5.172e+03, 1.293e+04, 2.586e+04, 5.172e+04])
-    temp_grid_init = np.array([0.000e+00, 7.253e+01, 1.450e+02, 2.175e+02, 2.981e+02, 3.481e+02, 4.061e+02, 
-        4.641e+02, 5.222e+02, 5.802e+02, 6.382e+02, 6.962e+02, 7.543e+02, 8.123e+02,
-        8.703e+02, 9.283e+02, 9.864e+02, 1.044e+03, 1.160e+03, 1.276e+03, 1.392e+03,
-        1.566e+03, 1.740e+03, 1.914e+03, 2.088e+03, 2.320e+03, 2.611e+03, 2.901e+03, 
-        3.481e+03, 4.061e+03, 4.641e+03, 5.222e+03, 5.802e+03, 6.382e+03, 6.962e+03,
-        8.123e+03, 9.283e+03, 1.044e+04, 1.160e+04, 1.276e+04, 1.392e+04, 1.566e+04,
-        1.740e+04, 1.914e+04, 2.088e+04, 2.320e+04, 2.611e+04, 2.901e+04, 3.191e+04,
-        3.481e+04, 4.061e+04, 4.641e+04, 5.802e+04, 7.543e+04, 9.283e+04, 1.160e+05,
-        1.450e+05, 1.740e+05, 2.320e+05, 2.901e+05, 3.481e+05, 4.641e+05, 5.802e+05,
-        9.283e+05, 1.160e+06, 1.740e+06, 2.901e+06, 4.641e+06, 6.962e+06, 9.283e+06,
-        1.160e+07, 1.740e+07, 2.901e+07, 6.962e+07, 1.160e+08, 2.320e+08, 5.802e+08,
-        1.160e+09, 2.320e+09, 5.802e+09, 1.160e+10])
+    # Normalized grid  adapted from table 3720
+    # temperature grid  in eV
+    rho_grid_init = np.concatenate((np.array([0]),
+      np.logspace(-10,-7,15)[:-1], # 5 pt per decade
+      np.logspace(-6,-1,50),       # 10 pt per decade
+      np.array(
+      [ 1.197e-01,  1.437e-01,  1.676e-01,  1.916e-01,  2.394e-01,  2.873e-01,
+        3.352e-01,  3.830e-01,  4.307e-01,  4.789e-01,  5.267e-01,  5.744e-01,
+        6.226e-01,  6.704e-01,  7.181e-01,  7.659e-01,  7.900e-01,  8.141e-01,
+        8.378e-01,  8.619e-01,  8.859e-01,  9.096e-01,  9.289e-01,  9.481e-01,
+        9.578e-01,  9.674e-01,  9.863e-01,  1.006e+00,  1.030e+00,  1.053e+00,
+        1.101e+00,  1.149e+00,  1.245e+00,  1.341e+00,  1.437e+00,  1.532e+00,
+        1.628e+00,  1.724e+00,  1.820e+00,  1.916e+00,  2.155e+00,  2.394e+00,
+        2.634e+00,  2.873e+00,  3.113e+00,  3.352e+00,  3.592e+00,  3.830e+00,
+        4.307e+00,  4.789e+00,  5.267e+00,  5.744e+00,  6.226e+00,  6.704e+00,
+        7.181e+00,  7.659e+00,  8.141e+00,  8.619e+00,  9.096e+00,  9.578e+00,
+        1.053e+01,  1.149e+01,  1.245e+01,  1.437e+01,  1.676e+01,  1.916e+01,
+        2.155e+01,  2.394e+01,  2.873e+01,  3.352e+01,  3.830e+01,  4.789e+01,
+        5.744e+01,  6.704e+01,  7.659e+01,  8.619e+01,  9.578e+01,  1.197e+02,
+        1.437e+02,  1.916e+02,  2.873e+02,  3.830e+02,  5.744e+02,  7.659e+02,
+        9.578e+02,  1.916e+03,  4.789e+03])))
+    temp_grid_init = np.concatenate((np.array(
+      [ 0.        ,  0.0062311 ,  0.01245704,  0.01868557,  0.02560997,
+        0.0299055 ,  0.03488832,  0.03987113,  0.04486254,  0.04984536,
+        0.05482818,  0.059811  ,  0.06480241,  0.06978522,  0.07476804,
+        0.07975086,  0.08474227,  0.08969072,  0.09965636,  0.10962199,
+        0.11958763,  0.13453608,  0.14948454,  0.16443299,  0.17938144,
+        0.19931271,  0.22431271,  0.2492268 ,  0.29905498,  0.34888316,
+        0.39871134,  0.44862543,  0.49845361,  0.54828179,  0.59810997,
+        0.69785223,  0.79750859,  0.89690722,  0.99656357,  1.09621993,
+        1.19587629,  1.34536082,  1.49484536,  1.6443299 ,  1.79381443,
+        1.99312715,  2.24312715,  2.49226804,  2.74140893]),
+        np.logspace(np.log10(3),1,15), np.arange(11,50,1), np.arange(50,80,2.5),
+        np.arange(80,100,5), np.logspace(2,4,50),np.logspace(4,6,20)[1:] ))
+    #temp_grid_init = np.logspace(-3, 6, 46)
 
-    def __init__(self, rho_ref, kind='solid', subsample_rho=1, subsample_temp=1, temp_factor=1.0):
+
+    def __init__(self, rho_ref=None, kind='solid', subsample_rho=0, subsample_temp=0, temp_factor=1.0):
+        self.temp_grid = self._subsample(
+                                self.temp_grid_init*eV2K_cst*temp_factor, subsample_temp)
         if kind=='solid':
-            self.rho_grid = self._subsample_arithmetic_mean(
-                                self.rho_grid_init*rho_ref/2.7, subsample_rho)
-            self.temp_grid = self._subsample_arithmetic_mean(
-                                self.temp_grid_init*temp_factor, subsample_temp)
+            if rho_ref is None:
+                raise ValueError
+            self.rho_grid = self._subsample(
+                                self.rho_grid_init*rho_ref, subsample_rho)
+        elif kind=='gas':
+            rho_grid_init = np.concatenate( (np.array([0]),
+                   np.logspace(-10,-7,15)[:-1],
+                   np.logspace(-7, 1, 80)[:-1],
+                   np.logspace(1, 2, 7)))
+            self.rho_grid =  self._subsample(rho_grid_init, subsample_rho)
+        elif kind=='log':
+            self.temp_grid = np.logspace(-3, 6, 89)*eV2K_cst
+            self.rho_grid = np.logspace(-8, 3.5, 46)
+
         else:
             raise NotImplemented
 
     @classmethod
-    def _subsample_arithmetic_mean(cls, grid, iterations=1):
+    def _subsample(cls, grid, iterations=0, mean='geometric'):
         if iterations == 0:
             return grid
+        if mean == 'arithmetic':
+            grid_extra = _arithmetic_mean(grid)
+        elif mean == 'geometric':
+            grid_extra = _geometric_mean(grid)
+        else:
+            raise ValueError
+
         grid_extra = 0.5*(grid[:-1] + grid[1:])
         grid_new = np.concatenate((grid, grid_extra))
         grid_new = np.sort(grid_new)
