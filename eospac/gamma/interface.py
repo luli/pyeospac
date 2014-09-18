@@ -26,8 +26,16 @@ def T_DUt(self, rho, eint):
     pres = (self['game'] - 1)*eint*rho
     return pres*self['abar']/(rho*R_CST)
 
+def Ut_DPt(self, rho, pres):
+    eint = pres/((self['game']-1)*rho)
+    return eint
+
+def T_DPt(self, rho, pres):
+    return pres*self['abar']/(rho*R_CST)
+
 available_tables = {'Pt_DT': Pt_DT, 'Ut_DT': Ut_DT,
-                    'Pt_DUt': Pt_DUt, 'T_DUt': T_DUt}
+                    'Pt_DUt': Pt_DUt, 'T_DUt': T_DUt,
+                    'Ut_DPt': Ut_DPt, 'T_DPt': T_DPt}
 
 
 class GammaTable(TableBase):
@@ -57,13 +65,9 @@ class GammaMaterial(MaterialBase):
         -----------
          - material: int: 4 digit SESAME material ID
          - tables: list: ['table1_id', 'table2_id', ..etc]
-         - options: dict: {'tableid_regexpr': {'opt1': optval}, etc}
-            For example {".t_DT": {'create_tzero': True}} would apply the
-            EOS_CREATE_TZERO option to both 'Pt_DT' and 'Ut_DT' tables. The
-            tableid_regexpr accepts regular expressions.
-            [see  help(re) for more details].
-         - game: defined in P = (γ_e - 1)ερ
-         - gamc: defined in γ_c = ρ/P * ∂P/∂ρ|_S
+         - options: 
+            game: defined in P = (γ_e - 1)ερ
+            gamc: defined in γ_c = ρ/P * ∂P/∂ρ|_S
         """
         self.tables = _pull_tables(tables, spec, available_tables.keys())
 

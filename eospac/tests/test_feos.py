@@ -23,11 +23,11 @@ def test_low_level():
     use_maxwell = 1
     table_handle = 1
     use_softsphere = 1
-    matid = 3717
+    matid = 3719
     my_opts ={'use_maxwell': True, 'use_softspheres': True,
                 'maxwell_temp_arr': None, 'max_materials': 2,
                 'grid_subsample_default': 0}
-    mat1 = FeosMaterial(3717, tables=['.*_DT'], options=my_opts, units='cgs')
+    mat1 = FeosMaterial(matid, tables=['.*_DT'], options=my_opts, units='cgs')
     D_arr, T_arr = mat1.Pt_DT['D_Array'], mat1.Pt_DT['T_Array']
     D, T = np.meshgrid(D_arr, T_arr, indices='ij')
     #print mat1.Pt_DT(D, T).min()

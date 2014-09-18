@@ -1,17 +1,30 @@
-PyEOSPAC: Python bindings for EOSPAC6
-=====================================
+PyEOSPAC: Python bindings for the EOSPAC6 library
+=================================================
+
+Overview
+========
+
+
+
+Dependencies
+============
+
+Python 2.7, `setuptools`, `cython`, `numpy`, `scipy` modules are necessary for the base functionallity.
+
+Besides, at least one of the following libraries should also be installed,
+
+    - the EOSPAC library (Pimentel et al., LANL): https://laws.lanl.gov/projects/data/eos/eospacReleases.php
+    - the FEOS code package (Faik et al.): http://th.physik.uni-frankfurt.de/~faik/feos.php?lang=eng
+
+otherwise the build-in gamma law EoS will be used. 
+
+Optional dependencies  include `nose`, `matplotlib`, `ipython` and `pandas`.
 
 Installation notes
 ==================
 
-System requirements:
 
-* Python 2.7
-* setuptools
-* Cython 
-* numpy
 
-Note: This module has only been tested on Linux. 
 
 Optional dependencies:
 

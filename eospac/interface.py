@@ -21,6 +21,10 @@ def EosMaterial(material=None, tables=['*'], options={},
            from . import gamma
            return gamma.GammaMaterial(material=material, tables=tables,
                                 options=options, spec=spec, units=units)
+       if backend=='vdw':
+           from . import vdw
+           return vdw.VdwMaterial(material=material, tables=tables,
+                                options=options, spec=spec, units=units)
        elif backend=='eospac':
            from . import eospac as eospac_c
            return eospac_c.EospacMaterial(material=material, tables=tables,
