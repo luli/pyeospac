@@ -44,6 +44,34 @@ available_tables = {'Pt_DT': Pt_DT, 'Ut_DT': Ut_DT,
                     'Pt_DSt': Pt_DSt, 'St_DUt': St_DUt,
                     'St_DT': St_DT}
 
+def Pt_DT_dFx(self, rho, sint):
+    print 'Warning: Pt_DT_dFx is is a derivative vs specific volume, not density !!!!'
+    delta = self['delta']
+    exp_pow = np.exp(delta*self['abar']*(sint)/R_CST)
+    return -delta*(delta+1)*exp_pow/(1./rho - self['b'])**(delta+2.0) + 2*self['a']*rho**3
+
+def Pt_DT_dFxx(self, rho, sint):
+    print 'Warning: Pt_DT_dFx is is a derivative vs specific volume, not density !!!!'
+    delta = self['delta']
+    return -R_CST/((1./rho - self['b'])**(2) + 2*self['a']*rho**3
+
+
+def Pt_DSt_dFx(self, rho, sint):
+    print 'Warning: Pt_DSt_dFx is is a derivative vs specific volume, not density !!!!'
+    delta = self['delta']
+    exp_pow = np.exp(delta*self['abar']*(sint)/R_CST)
+    return -delta*(delta+1)*exp_pow/(1./rho - self['b'])**(delta+2.0) + 2*self['a']*rho**3
+
+
+def Pt_DSt_dFxx(self, rho, sint):
+    print 'Warning: Pt_DSt_dFxx is is a derivative vs specific volume, not density !!!!'
+    delta = self['delta']
+    exp_pow = np.exp(delta*self['abar']*(sint)/R_CST)
+    return delta*(delta+1)*(delta+2)*exp_pow/(1./rho - self['b'])**(delta+3.0) - 6*self['a']*rho**4
+
+avalable_op = {'dFx': {'Pt_DSt': Pt_DSt_dFx},
+               'dFxx': {'Pt_DSt': Pt_DSt_dFxx}}
+
 
 class VdwTable(TableBase):
     _original_units = 'cgs'
@@ -55,11 +83,20 @@ class VdwTable(TableBase):
             self[key] = options[key] 
 
     def _interpolate(self, X, Y, kind):
+        Xin, Yin = X*self._X_convert, Y*self._Y_convert
         if kind == 'F':
-            Xin, Yin = X*self._X_convert, Y*self._Y_convert
             return available_tables[self._name](self, Xin, Yin)*self._F_convert
         else:
             return self._differentiate(X, Y, kind)
+        #elif kind in avalable_op and self._name in avalable_op[kind]:
+        #    res  =  avalable_op[kind][self._name](self, Xin, Yin)*self._F_convert
+        #    if 'xx' in kind:
+        #        res *= res/(self._X_convert**2)
+        #    elif 'x' in kind:
+        #        res *= res/(self._X_convert)
+        #    else:
+        #        raise NotImplemented
+        #    return res
 
 
 
