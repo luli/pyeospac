@@ -3,4 +3,6 @@
 build
 dist
 *.o
-eospac/constants.py
+*.so
+*.c
+constants.py

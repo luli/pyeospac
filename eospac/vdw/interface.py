@@ -44,16 +44,13 @@ available_tables = {'Pt_DT': Pt_DT, 'Ut_DT': Ut_DT,
                     'Pt_DSt': Pt_DSt, 'St_DUt': St_DUt,
                     'St_DT': St_DT}
 
-def Pt_DT_dFx(self, rho, sint):
-    print 'Warning: Pt_DT_dFx is is a derivative vs specific volume, not density !!!!'
-    delta = self['delta']
-    exp_pow = np.exp(delta*self['abar']*(sint)/R_CST)
-    return -delta*(delta+1)*exp_pow/(1./rho - self['b'])**(delta+2.0) + 2*self['a']*rho**3
+def Pt_DT_dFx(self, rho, temp):
+    print 'Warning: Pt_DT.dFx is is a derivative vs specific volume, not density !!!!'
+    return -R_CST*temp/(self['abar']*(1./rho - self['b'])**(2)) + 2*self['a']*rho**3
 
-def Pt_DT_dFxx(self, rho, sint):
-    print 'Warning: Pt_DT_dFx is is a derivative vs specific volume, not density !!!!'
-    delta = self['delta']
-    return -R_CST/((1./rho - self['b'])**(2) + 2*self['a']*rho**3
+def Pt_DT_dFxx(self, rho, temp):
+    print 'Warning: Pt_DT.dFxx is is a derivative vs specific volume, not density !!!!'
+    return 2*R_CST*temp/(self['abar']*(1./rho - self['b'])**(3)) - 6*self['a']*rho**4
 
 
 def Pt_DSt_dFx(self, rho, sint):
@@ -164,7 +161,6 @@ def fundemental_derivative(tab, spec, *XYf):
     XYf_DT = XYf[:]
     rho = XYf_DT[0]
     Pt = tab.get_table('P{s}_DT', spec)(*XYf_DT)/tab.Pt_DT._F_convert
-    print Pt
     delta = tab.Pt_DT['delta']
     a = tab.Pt_DT['a']
     b = tab.Pt_DT['b']
