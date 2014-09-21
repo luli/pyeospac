@@ -129,7 +129,8 @@ class RankineHugoniot:
             err =  (eint1 - eint0) - 0.5*(pres0 + pres1)*(1/rho0 - 1/x)
             return err
         # just use 1 with appropriate shape as initial state
-        x0 = 1.01*rho0*pres1**0#RankineHugoniot._get_analytical_pres2dens(state0, pres1, game=10)
+        #x0 = 0.90*rho0*pres1**0#RankineHugoniot._get_analytical_pres2dens(state0, pres1, game=10)
+        x0 = RankineHugoniot._get_analytical_pres2dens(state0, pres1, game=200)
         sol = root(objfunc_ener, x0,
                 args=(rho0, pres0, eint0, pres1, eos_itp),
                 method=root_opts['method'])

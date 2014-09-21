@@ -39,10 +39,17 @@ def St_DT(self, rho, temp):
     eint = R_CST*temp/(self['abar']*self['delta']) - self['a']*rho
     return R_CST*np.log((1./rho - self['b'])*(eint + rho*self['a'])**(1./self['delta']))/self['abar']
 
+def At_DT(self, rho, temp):
+    # A = U - TS 
+    # copy from previous lines
+    eint = R_CST*temp/(self['abar']*self['delta']) - self['a']*rho
+    sint = R_CST*np.log((1./rho - self['b'])*(eint + rho*self['a'])**(1./self['delta']))/self['abar']
+    return eint - temp*sint
+
 available_tables = {'Pt_DT': Pt_DT, 'Ut_DT': Ut_DT,
                     'T_DUt': T_DUt, 'T_DPt': T_DPt,
                     'Pt_DSt': Pt_DSt, 'St_DUt': St_DUt,
-                    'St_DT': St_DT}
+                    'St_DT': St_DT, 'At_DT': At_DT}
 
 def Pt_DT_dFx(self, rho, temp):
     print 'Warning: Pt_DT.dFx is is a derivative vs specific volume, not density !!!!'
