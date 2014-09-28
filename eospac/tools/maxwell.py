@@ -55,6 +55,7 @@ def saturation_curve(tab, rho, temp, extra_fields={}):
 
     sat_l = {'rho': sat_l[:,0], 'temp': sat_l[:,1]}
     sat_v = {'rho': sat_v[:,0], 'temp': sat_v[:,1]}
+
     out = {'sat_l': sat_l, 'sat_v': sat_v}
     for maj_key in out:
         for key, func in extra_fields.iteritems():

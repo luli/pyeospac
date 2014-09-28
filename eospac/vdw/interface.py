@@ -8,7 +8,7 @@ import numpy as np
 
 from scipy.constants import physical_constants
 
-from ..base import MaterialBase, TableBase, _pull_tables
+from ..base import MaterialBase, TableBase, _pull_tables, EosUnits
 from ..quantities import add_quantity
 
 R_CST = physical_constants['molar gas constant'][0]*1e7 # erg.K⁻¹.mol⁻¹
@@ -24,8 +24,11 @@ def Ut_DT(self, rho, temp):
 def T_DUt(self, rho, eint):
     return self['abar']*self['delta'] * (eint + self['a']*rho)/R_CST
 
+def Pt_DUt(self, rho, eint):
+    return rho*self['delta'] * (eint + self['a']*rho)/(1 - rho*self['b']) - self['a']*rho**2
+
 def T_DPt(self, rho, pres):
-    return self['abar']*(pres - self['a']*rho**2)*(1./rho - self['b'])/R_CST
+    return self['abar']*(pres + self['a']*rho**2)*(1./rho - self['b'])/R_CST
 
 def Pt_DSt(self, rho, sint):
     return self['delta']* np.exp(self['delta']*self['abar']*(sint)/R_CST)/(1./rho - self['b'])**(self['delta']+1.0) - self['a']*rho**2
@@ -49,7 +52,8 @@ def At_DT(self, rho, temp):
 available_tables = {'Pt_DT': Pt_DT, 'Ut_DT': Ut_DT,
                     'T_DUt': T_DUt, 'T_DPt': T_DPt,
                     'Pt_DSt': Pt_DSt, 'St_DUt': St_DUt,
-                    'St_DT': St_DT, 'At_DT': At_DT}
+                    'St_DT': St_DT, 'At_DT': At_DT,
+                    'Pt_DUt': Pt_DUt}
 
 def Pt_DT_dFx(self, rho, temp):
     print 'Warning: Pt_DT.dFx is is a derivative vs specific volume, not density !!!!'
@@ -59,6 +63,14 @@ def Pt_DT_dFxx(self, rho, temp):
     print 'Warning: Pt_DT.dFxx is is a derivative vs specific volume, not density !!!!'
     return 2*R_CST*temp/(self['abar']*(1./rho - self['b'])**(3)) - 6*self['a']*rho**4
 
+def Pt_DT_dFy(self, rho, temp):
+    return rho*R_CST/(self['abar']*(1 - rho*self['b']))
+
+def Pt_DUt_dFy(self, rho, eint):
+    return rho*self['delta']/(1 - rho*self['b'])
+
+def Ut_DT_dFy(self, rho, eint):
+    return rho/(self['delta']*self['abar'])
 
 def Pt_DSt_dFx(self, rho, sint):
     print 'Warning: Pt_DSt_dFx is is a derivative vs specific volume, not density !!!!'
@@ -73,8 +85,14 @@ def Pt_DSt_dFxx(self, rho, sint):
     exp_pow = np.exp(delta*self['abar']*(sint)/R_CST)
     return delta*(delta+1)*(delta+2)*exp_pow/(1./rho - self['b'])**(delta+3.0) - 6*self['a']*rho**4
 
-avalable_op = {'dFx': {'Pt_DSt': Pt_DSt_dFx},
-               'dFxx': {'Pt_DSt': Pt_DSt_dFxx}}
+avalable_op = {'dFx': {'Pt_DSt': Pt_DSt_dFx,
+                        'Pt_DT': Pt_DT_dFx},
+               'dFxx': {'Pt_DSt': Pt_DSt_dFxx,
+                        'Pt_DT': Pt_DT_dFxx},
+               'dFy': {'Pt_DT': Pt_DT_dFy,
+                       'Pt_DUt': Pt_DUt_dFy,
+                       'Ut_DT': Ut_DT_dFy},
+               }
 
 
 class VdwTable(TableBase):
@@ -167,7 +185,8 @@ def fundemental_derivative(tab, spec, *XYf):
         raise ValueError('This derived variable is only compatible with the vdw backend!')
     XYf_DT = XYf[:]
     rho = XYf_DT[0]
-    Pt = tab.get_table('P{s}_DT', spec)(*XYf_DT)/tab.Pt_DT._F_convert
+    units = EosUnits(tab.Pt_DT._requested_units, 'cgs')
+    Pt = tab.get_table('P{s}_DT', spec)(*XYf_DT)*units.o2r('P')
     delta = tab.Pt_DT['delta']
     a = tab.Pt_DT['a']
     b = tab.Pt_DT['b']
