@@ -239,28 +239,21 @@ def fundemental_derivative(tab, spec, *XYf):
     return 1 + 0.5*rho**2*tab.get_table('P{s}_DS{s}', spec).dFxx(*XYf_DS)/\
             (tab.q['gamc_s'](*XYf)*tab.get_table('P{s}_DT', spec)(*XYf_DT))
 
-@add_quantity(name='therm_consistency_T', args='DT', dependencies=['U{s}_DS{s}', 'P{s}_DT', 'S{s}_DT'])
-def check_thermodynamic_consistency(tab, spec, *XYf):
-    """Thermodynamic consistency: relative error"""# ε = (∂E/∂S|_V - T)/T
-    XYf_DT = XYf[:]
-    T = XYf_DT[1]
-    XYf_DS = list(XYf[:])
-    XYf_DS[1] = tab.get_table('S{s}_DT', spec)(*XYf_DT)
-    # (∂E/∂S|_V - T)/T
-    dE_S = tab.get_table('U{s}_DS{s}', spec).dFy(*XYf_DS)
-    return np.abs((dE_S - T))/T
-
-@add_quantity(name='therm_consistency_S', args='DT', dependencies=['U{s}_DS{s}', 'P{s}_DT', 'S{s}_DT'])
+@add_quantity(name='therm_consistency', args='DT', dependencies=['P{s}_DT', 'U{s}_DT'])
 def check_thermodynamic_consistency(tab, spec, *XYf):
     """Thermodynamic consistency: relative error"""# ε = (∂E/∂V|_S - P)/P )"""
     XYf_DT = XYf[:]
     rho = XYf_DT[0]
-    P = tab.get_table('P{s}_DT', spec)(*XYf_DT)
-    XYf_DS = list(XYf[:])
-    XYf_DS[1] = tab.get_table('S{s}_DT', spec)(*XYf_DT)
-    # (∂E/∂V|_S - P)/P
-    dE_V = rho**2*tab.get_table('U{s}_DS{s}', spec).dFx(*XYf_DS)
-    return  np.abs(dE_V - P)/np.abs(P)
+    temp = XYf_DT[1]
+    Pt = tab.get_table('P{s}_DT', spec)(*XYf_DT)
+    dU_rho =  tab.get_table('U{s}_DT', spec).dFx(*XYf_DT)
+    dP_T =  tab.get_table('P{s}_DT', spec).dFy(*XYf_DT)
+    num  = (rho**2 * dU_rho - Pt + temp*dP_T)**2
+    denum = ((rho**2 * dU_rho)**2 + Pt**2 + (temp*dP_T)**2)
+    res = (num/denum)**0.5
+    #idx =  np.unravel_index(np.nanargmax(res), res.shape)
+
+    return res
 
 @add_quantity(name='game0', args='DT', dependencies=['P{s}_DT', 'U{s}_DT'])
 def game0(tab, spec, *XYf):

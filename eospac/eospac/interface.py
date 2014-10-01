@@ -172,6 +172,7 @@ class EospacMaterial(MaterialBase):
 
 
 class _EosMixtureSubclass:
+    _original_units = 'eospac'
     def __init__(self, table_handles):
         self._id_list = table_handles.copy()
 
@@ -226,6 +227,7 @@ class _EosMixtureSubclass:
 
 
 class EospacMixture:
+    _original_units = 'eospac'
     def __init__(self, materials, tables=['Pt_DT', 'Ut_DT'], options={}, spec=['t']):
         """
         Parameters:
@@ -241,7 +243,7 @@ class EospacMixture:
         """
         self.materials = np.array([int(mat) for mat in materials], dtype='int32')
 
-        self.tables = _pull_tables(tables, spec)
+        self.tables = _pull_tables(tables, spec, cst.tables)
 
         self.options = options
         Mat, Tabs = np.meshgrid(self.materials,
