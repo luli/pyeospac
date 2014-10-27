@@ -26,7 +26,7 @@ def save_eostab_to_vtk(eosmat, filename):
                     assert_allclose(x,xl[0])
                 for y in xl:
                     assert_allclose(y,xl[0])
-                X, Y = np.meshgrid(x,y, indices='ij')
+                X, Y = np.meshgrid(x,y, indexing='ij')
                 X = _3d_reshape(X)
                 Y = _3d_reshape(Y)
                 Z = np.zeros(X.shape)

@@ -56,7 +56,7 @@ def save2vtk(self, filename, tables=[], quantities=[], z_pos=False,
             temp[0] = 0.5*temp[1]
 
     # converting 1D grid to 3D
-    rho_grid, temp_grid = np.meshgrid(rho, temp, indices='ij')
+    rho_grid, temp_grid = np.meshgrid(rho, temp, indexing='ij')
     rho_grid = rho_grid.reshape(rho_grid.shape + (1,))
     temp_grid = temp_grid.reshape(temp_grid.shape + (1,))
     z_grid = np.zeros(temp_grid.shape) # setting the 3rd coordinate to zero

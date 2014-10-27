@@ -95,6 +95,8 @@ def eos_plot(mat, name, ax,spec='t', vmin=None, vmax=None,
     ax.set_ylabel(r'$T$ [eV]')
     return ax
 
+
+
 def plot_eos_table(ax, mat, table_name, spec='t', vmin=None, vmax=None,
          nx=300, ny=350, xmax=None, ymax=None, xmin=None, ymin=None):
     """

@@ -100,20 +100,30 @@ cpdef _get_eos_all(int table_handle, int num_elements, int use_maxwell,
                 &Pi[k], &Ui[k], &Si[k], &Ai[k],\
                 &P_tf[k], &U_tf[k], &S_tf[k], &A_tf[k])
 
+    #res =  {'Pt': Pt.base,'Ut': Ut.base, 'St': St.base, 'At': At.base,
+    #        'Piz': Pi.base,'Uiz': Ui.base, 'Siz': Si.base, 'Aiz': Ai.base,
+    #        'Pec': Pe.base,'Uec': Ue.base, 'Sec': Se.base, 'Aec': Ae.base,
+    #        # pure the electronic part is given by the TF without cold
+    #        # curve corrections
+    #        'Pe': P_tf.base, 'Ue': U_tf.base, 'Se': S_tf.base, 'Ae': A_tf.base,
+    #        #'Pe': Pi.base, 'Ue': Ui.base, 'Se': Si.base, 'Ae': Ai.base,
+    #        'Pic': Pt.base - P_tf.base ,'Uic': Ut.base - U_tf.base,
+    #        'Sic': St.base - S_tf.base, 'Aic': At.base - A_tf.base,
+    #        'Zfc': Zbar.base, 'Zi': Zi, 'bellow_binodal': bellow_binodal.base}
     res =  {'Pt': Pt.base,'Ut': Ut.base, 'St': St.base, 'At': At.base,
             'Piz': Pi.base,'Uiz': Ui.base, 'Siz': Si.base, 'Aiz': Ai.base,
-            'Pec': Pe.base,'Uec': Ue.base, 'Sec': Se.base, 'Aec': Ae.base,
+            'Pe': Pe.base,'Ue': Ue.base, 'Se': Se.base, 'Ae': Ae.base,
             # pure the electronic part is given by the TF without cold
             # curve corrections
-            'Pe': P_tf.base, 'Ue': U_tf.base, 'Se': S_tf.base, 'Ae': A_tf.base,
+            #'Pe': P_tf.base, 'Ue': U_tf.base, 'Se': S_tf.base, 'Ae': A_tf.base,
             #'Pe': Pi.base, 'Ue': Ui.base, 'Se': Si.base, 'Ae': Ai.base,
-            'Pic': Pt.base - P_tf.base ,'Uic': Ut.base - (U_tf.base+E_offsets['offs_electron']),
-                    'Sic': St.base - S_tf.base, 'Aic': At.base - A_tf.base,
+            'Pic': Pt.base - P_tf.base ,'Uic': Ut.base - U_tf.base,
+            'Sic': St.base - S_tf.base, 'Aic': At.base - A_tf.base,
             'Zfc': Zbar.base, 'Zi': Zi, 'bellow_binodal': bellow_binodal.base}
-    for key in res.keys():
-        print key, np.min(res[key])
-    for key in E_offsets:
-        print key, E_offsets[key]
+    #for key in res.keys():
+    #    print key, np.min(res[key])
+    #for key in E_offsets:
+    #    print key, E_offsets[key]
     return res
 
 

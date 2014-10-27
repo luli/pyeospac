@@ -358,12 +358,13 @@ class MaterialBase(dict):
 
     _set_units = _set_units
 
-    def save(self, filename, ext='sesame_bin', matid=None):
+    def save(self, filename, ext='sesame_bin', matid=None, energy_offset={}):
         """ Write the current material to a file.
         Parameters:
         -----------
           - filename: filename
           - ext: extension: sesame_bin, ionmix
+          - energy_offset: dict with keys 'e', 'iz'
         """
 
         if ext == 'sesame_bin':
@@ -383,9 +384,15 @@ class MaterialBase(dict):
                    P_DT = self.get_table('P{s}_DT', spec=spec)
                    U_DT = self.get_table('U{s}_DT', spec=spec)
                    A_DT = self.get_table('A{s}_DT', spec=spec)
+                   if spec in energy_offset:
+                       U_offset = energy_offset[spec]
+                   elif spec == 't' and 'e' in energy_offset and 'iz' in energy_offset:
+                       U_offset = energy_offset['e'] + energy_offset['iz']
+                   else:
+                       U_offset = 0.
                    tabs[tab_id] = { 'rho': P_DT['R_Array']*units.o2r('D'),
                                     'temp': P_DT['T_Array']*units.o2r('T'),
-                                    'U': U_DT['F_Array']*units.o2r('U'),
+                                    'U': U_DT['F_Array']*units.o2r('U') + U_offset,
                                     'P': P_DT['F_Array']*units.o2r('P'),
                                     'A': P_DT['F_Array']*units.o2r('A')}
                 else:

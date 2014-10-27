@@ -46,16 +46,17 @@ DATA_DIR = "/home/rth/src/pyeospac/data/"
 #==============================================================================
 #                             Aluminum
 #==============================================================================
-#matbase = 3719
-#material = 'Al'
+matbase = 3719
+feosid = 83719
+material = 'Al'
 #tab_options={'type': 'ionmix',
 #          'abar':  26.9815, 'zbar':13, 'rho_ref': 2.7,
 #          'create_tzero': 'linear',
 #          'path': 'al-imx-32g.cn4'}
-#
-#feos_opts ={'use_maxwell': True, 'use_softspheres': True,
-#        'maxwell_temp_arr': None, 'max_materials': 2,
-#        'grid_subsample_default': 0}
+
+feos_opts ={'use_maxwell': True, 'use_softspheres': True,
+        'maxwell_temp_arr': None, 'max_materials': 1,
+        'grid_subsample_default': 0}
 #==============================================================================
 #                               Iron
 #==============================================================================
@@ -79,14 +80,14 @@ DATA_DIR = "/home/rth/src/pyeospac/data/"
 #==============================================================================
 #                               Iron
 #==============================================================================
-matbase = 3332
-feosid = 83333
-material = 'Cu'
-
-feos_opts ={'use_maxwell': False, 'use_softspheres': True,
-        'maxwell_temp_arr': None, 'max_materials': 1,
-        'grid_subsample_default': 1}
-
+#matbase = 3332
+#feosid = 83333
+#material = 'Cu'
+#
+#feos_opts ={'use_maxwell': False, 'use_softspheres': True,
+#        'maxwell_temp_arr': None, 'max_materials': 1,
+#        'grid_subsample_default': 1}
+#
 mat2 = eos.EosMaterial(matbase, tables=[tab for tab in avalable_tabs],
       options=feos_opts,
       units='cgs', backend='feos')

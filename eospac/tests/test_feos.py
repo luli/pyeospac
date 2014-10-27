@@ -29,7 +29,7 @@ def test_low_level():
                 'grid_subsample_default': 0}
     mat1 = FeosMaterial(matid, tables=['.*_DT'], options=my_opts, units='cgs')
     D_arr, T_arr = mat1.Pt_DT['D_Array'], mat1.Pt_DT['T_Array']
-    D, T = np.meshgrid(D_arr, T_arr, indices='ij')
+    D, T = np.meshgrid(D_arr, T_arr, indexing='ij')
     #print mat1.Pt_DT(D, T).min()
     #print mat1.Ut_DT(D, T).min()
 
