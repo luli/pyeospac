@@ -185,7 +185,7 @@ def get_contour(func, x, y, level=0.0, x_min=None, x_max=None, y_min=None, y_max
 
     x = x[x_mask]
     y = y[y_mask]
-    X, Y = np.meshgrid(x, y, indexing='ij')
+    X, Y = np.meshgrid(x, y, indexing='xy')
 
     M =  func(X, Y).T
     res = find_contours(M, level=level, fully_connected='low')
