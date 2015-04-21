@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import os
 from eospac import eV2K_cst
 from eospac.adiabat import Adiabat
 import numpy as np
@@ -15,7 +16,8 @@ def setup():
 
 def test_compare_with_original():
     """Compare with original SESAME implementation by Kerley """
-    f = np.loadtxt('hugoniot_data/compression_adiabat_3720.txt')
+    basedir = os.path.dirname(os.path.realpath(__file__))
+    f = np.loadtxt(os.path.join(basedir, 'hugoniot_data/compression_adiabat_3720.txt'))
     state0 = {'rho': 2.7, 'temp': 300}
     res_ref = {}
     for idx, key in enumerate(['rho', 'pres', 'eint', 'temp']):

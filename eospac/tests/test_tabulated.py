@@ -4,6 +4,7 @@ import eospac as eos
 import numpy as np
 import os.path
 from numpy.testing import assert_allclose
+from nose.plugins.skip import Skip, SkipTest
 
 from scipy.constants import physical_constants
 R_CST = physical_constants['molar gas constant'][0]*1e7 # erg.K⁻¹.mol⁻¹
@@ -31,6 +32,8 @@ def test_ionmix():
 
 def test_sesascii():
     """ Conversion from ASCII to Binary for SESAME format """
+    raise SkipTest
+
     matbase = 3719
     matid_new = int(9e4 + matbase)
     material = 'Fe'

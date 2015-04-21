@@ -169,7 +169,7 @@ class FeosMaterial(MaterialBase):
         self._init_base()
 
     def _precalculate_on_grid(self, rho_grid, temp_grid):
-        R, T = np.meshgrid(rho_grid, temp_grid, indices='ij')
+        R, T = np.meshgrid(rho_grid, temp_grid, indexing='ij')
         R_flat, T_flat = R.flatten(), T.flatten()
         #res = self._Nelements
         res_tmp = _get_eos_all(self._id, self._Nelements,
