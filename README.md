@@ -24,13 +24,13 @@ Optional dependencies  include `nose`, `matplotlib`, `ipython` and `pandas`.
 2. To install without root permissions run
 
 
-     $ python setup.py install --user
+         $ python setup.py install --user
 
 
 3. Optional: to execute the test suite run,
 
 
-     $ nosetests ./eospac/
+         $ nosetests ./eospac/
 
 Warning:
  a. this runs some tests shipped with PyEOSPAC, not the EOSPAC6 test suite..
